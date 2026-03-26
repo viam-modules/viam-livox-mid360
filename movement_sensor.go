@@ -86,7 +86,13 @@ func (m *mid360IMU) LinearVelocity(ctx context.Context, extra map[string]interfa
 }
 
 func (m *mid360IMU) Position(ctx context.Context, extra map[string]interface{}) (*geo.Point, float64, error) {
-	return nil, 0, movementsensor.ErrMethodUnimplementedPosition
+	x, y, z := dr.position()
+	// Convert meters to a fake geo point (1 degree lat ≈ 111319.5m)
+	// Origin at 0,0 — these are just local offsets for the SLAM prior
+	const metersPerDegree = 111319.5
+	lat := y / metersPerDegree
+	lng := x / metersPerDegree
+	return geo.NewPoint(lat, lng), z, nil
 }
 
 func (m *mid360IMU) CompassHeading(ctx context.Context, extra map[string]interface{}) (float64, error) {
@@ -94,13 +100,21 @@ func (m *mid360IMU) CompassHeading(ctx context.Context, extra map[string]interfa
 }
 
 func (m *mid360IMU) Orientation(ctx context.Context, extra map[string]interface{}) (spatialmath.Orientation, error) {
-	return nil, movementsensor.ErrMethodUnimplementedOrientation
+	ox, oy, oz, theta := dr.orientation()
+	return &spatialmath.OrientationVectorDegrees{
+		OX:    ox,
+		OY:    oy,
+		OZ:    oz,
+		Theta: theta,
+	}, nil
 }
 
 func (m *mid360IMU) Properties(ctx context.Context, extra map[string]interface{}) (*movementsensor.Properties, error) {
 	return &movementsensor.Properties{
 		AngularVelocitySupported:    true,
 		LinearAccelerationSupported: true,
+		PositionSupported:           true,
+		OrientationSupported:        true,
 	}, nil
 }
 
