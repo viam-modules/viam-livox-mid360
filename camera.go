@@ -8,6 +8,7 @@ import (
 
 	"github.com/golang/geo/r3"
 	"go.viam.com/rdk/components/camera"
+	"go.viam.com/rdk/data"
 	"go.viam.com/rdk/logging"
 	"go.viam.com/rdk/pointcloud"
 	"go.viam.com/rdk/resource"
@@ -94,7 +95,7 @@ func (c *mid360Camera) Properties(ctx context.Context) (camera.Properties, error
 }
 
 func (c *mid360Camera) Images(ctx context.Context, filterSourceNames []string, extra map[string]interface{}) ([]camera.NamedImage, resource.ResponseMetadata, error) {
-	return []camera.NamedImage{}, resource.ResponseMetadata{}, nil
+	return nil, resource.ResponseMetadata{}, data.ErrNoCaptureToStore
 }
 
 func (c *mid360Camera) Geometries(ctx context.Context, extra map[string]interface{}) ([]spatialmath.Geometry, error) {
