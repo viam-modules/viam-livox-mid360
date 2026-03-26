@@ -24,6 +24,9 @@ type deadReckoner struct {
 	// Last timestamp (nanoseconds, device clock)
 	lastTS uint64
 	inited bool
+
+	// If true, zero out vertical acceleration (avoids gravity drift)
+	ignoreZAccel bool
 }
 
 var dr = &deadReckoner{}
@@ -33,6 +36,7 @@ func init() {
 	dr.rot[0][0] = 1
 	dr.rot[1][1] = 1
 	dr.rot[2][2] = 1
+	dr.ignoreZAccel = true
 }
 
 const gravityG = 9.80665
@@ -73,6 +77,11 @@ func (d *deadReckoner) update(gyroX, gyroY, gyroZ, accX, accY, accZ float32, tsN
 
 	// 3. Remove gravity (world Z is up)
 	worldAZ -= gravityG
+
+	// Zero out vertical acceleration to avoid gravity drift
+	if d.ignoreZAccel {
+		worldAZ = 0
+	}
 
 	// 4. Integrate acceleration → velocity → position
 	d.velX += worldAX * dt
