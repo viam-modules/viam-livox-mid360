@@ -1,7 +1,7 @@
 {
   "module_id": "evan:livox-mid360",
   "visibility": "public",
-  "url": "https://github.com/viamrobotics/livox-mid-360",
+  "url": "https://github.com/viam-modules/viam-livox-mid360",
   "description": "Viam module for the Livox Mid-360 LiDAR (camera + IMU)",
   "models": [
     {
