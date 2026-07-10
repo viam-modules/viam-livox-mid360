@@ -111,15 +111,17 @@ func goImuCallback(handle C.uint32_t, devType C.uint8_t, data *C.LivoxLidarEther
 	ts := binary.LittleEndian.Uint64(tsBuf[:])
 
 	p := (*C.LivoxLidarImuRawPoint)(C.pkt_data(pkt))
+	gx, gy, gz := float32(p.gyro_x), float32(p.gyro_y), float32(p.gyro_z)
+	ax, ay, az := float32(p.acc_x), float32(p.acc_y), float32(p.acc_z)
+
 	latestIMU.Store(&imuReading{
-		GyroX:     float32(p.gyro_x),
-		GyroY:     float32(p.gyro_y),
-		GyroZ:     float32(p.gyro_z),
-		AccX:      float32(p.acc_x),
-		AccY:      float32(p.acc_y),
-		AccZ:      float32(p.acc_z),
+		GyroX: gx, GyroY: gy, GyroZ: gz,
+		AccX: ax, AccY: ay, AccZ: az,
 		Timestamp: ts,
 	})
+
+	// Feed dead reckoner at 200Hz
+	dr.update(gx, gy, gz, ax, ay, az, ts)
 }
 
 //export goInfoChangeCallback

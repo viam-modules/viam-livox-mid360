@@ -1,0 +1,24 @@
+{
+  "$schema": "https://dl.viam.dev/module.schema.json",
+  "module_id": "viam:livox-mid360",
+  "visibility": "public",
+  "url": "https://github.com/viam-modules/viam-livox-mid360",
+  "description": "Livox Mid-360 LiDAR driver providing point cloud (Camera) and IMU (MovementSensor) data via Livox-SDK2.",
+  "models": [
+    {
+      "api": "rdk:component:camera",
+      "model": "viam:livox:mid360"
+    },
+    {
+      "api": "rdk:component:movement_sensor",
+      "model": "viam:livox:mid360-imu"
+    }
+  ],
+  "entrypoint": "livox-mid-360",
+  "build": {
+    "setup": "make sdk",
+    "build": "make build && tar -czf module.tar.gz livox-mid-360 meta.json",
+    "path": "module.tar.gz",
+    "arch": ["linux/amd64", "linux/arm64"]
+  }
+}
