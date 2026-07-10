@@ -22,7 +22,7 @@ livox-mid-360/
 
 ## Components
 
-### 1. Camera — `viam:livox:mid360`
+### 1. Camera — `viam-labs:livox:mid360`
 
 Implements the Viam Camera interface. Only `NextPointCloud()` and `Properties()` are meaningful; `Images()` returns unimplemented.
 
@@ -38,7 +38,7 @@ type Camera interface {
 
 **NextPointCloud** returns one complete frame's worth of accumulated points. The Mid-360 sends ~200k pts/sec across many UDP packets; a "frame" at 10Hz is ~20k points.
 
-### 2. MovementSensor — `viam:livox:mid360-imu`
+### 2. MovementSensor — `viam-labs:livox:mid360-imu`
 
 Implements the Viam MovementSensor interface for the built-in IMU.
 
@@ -222,7 +222,7 @@ Passed via Viam app JSON. Both components share the same config:
     {
       "name": "lidar",
       "api": "rdk:component:camera",
-      "model": "viam:livox:mid360",
+      "model": "viam-labs:livox:mid360",
       "attributes": {
         "sensor_ip": "192.168.1.1xx",
         "host_ip": "",
@@ -232,7 +232,7 @@ Passed via Viam app JSON. Both components share the same config:
     {
       "name": "imu",
       "api": "rdk:component:movement_sensor",
-      "model": "viam:livox:mid360-imu",
+      "model": "viam-labs:livox:mid360-imu",
       "attributes": {
         "sensor_ip": "192.168.1.1xx",
         "host_ip": "",

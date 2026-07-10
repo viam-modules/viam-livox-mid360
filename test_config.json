@@ -13,7 +13,7 @@
     {
       "name": "lidar",
       "api": "rdk:component:camera",
-      "model": "viam:livox:mid360",
+      "model": "viam-labs:livox:mid360",
       "attributes": {
         "sensor_ip": "192.168.1.196",
         "host_ip": "192.168.1.10"
@@ -22,7 +22,7 @@
     {
       "name": "imu",
       "api": "rdk:component:movement_sensor",
-      "model": "viam:livox:mid360-imu",
+      "model": "viam-labs:livox:mid360-imu",
       "attributes": {
         "sensor_ip": "192.168.1.196",
         "host_ip": "192.168.1.10"

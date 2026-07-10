@@ -3,8 +3,8 @@ package main
 import "go.viam.com/rdk/resource"
 
 var (
-	cameraModel = resource.NewModel("viam", "livox", "mid360")
-	imuModel    = resource.NewModel("viam", "livox", "mid360-imu")
+	cameraModel = resource.NewModel("viam-labs", "livox", "mid360")
+	imuModel    = resource.NewModel("viam-labs", "livox", "mid360-imu")
 )
 
 // Config is shared by both the camera and movement sensor components.
