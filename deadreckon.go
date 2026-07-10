@@ -3,6 +3,8 @@ package main
 import (
 	"math"
 	"sync"
+
+	"go.viam.com/rdk/spatialmath"
 )
 
 // deadReckoner integrates IMU data at 200Hz to estimate pose.
@@ -100,61 +102,52 @@ func (d *deadReckoner) position() (x, y, z float64) {
 	return d.posX, d.posY, d.posZ
 }
 
-// orientation returns the current rotation as an orientation vector (axis + angle).
-func (d *deadReckoner) orientation() (ox, oy, oz, theta float64) {
+// orientation returns the current rotation in axis-angle representation.
+func (d *deadReckoner) orientation() *spatialmath.R4AA {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	// Extract angle-axis from rotation matrix
-	// angle = arccos((trace(R) - 1) / 2)
-	trace := d.rot[0][0] + d.rot[1][1] + d.rot[2][2]
-	cosAngle := (trace - 1) / 2
-	cosAngle = math.Max(-1, math.Min(1, cosAngle)) // clamp
-	theta = math.Acos(cosAngle)
-
-	if theta < 1e-10 {
-		return 0, 0, 1, 0 // identity
+	// spatialmath.RotationMatrix stores the transpose of this active
+	// body→world matrix (see its Quaternion() conversion), so flatten
+	// column-major.
+	rm, err := spatialmath.NewRotationMatrix([]float64{
+		d.rot[0][0], d.rot[1][0], d.rot[2][0],
+		d.rot[0][1], d.rot[1][1], d.rot[2][1],
+		d.rot[0][2], d.rot[1][2], d.rot[2][2],
+	})
+	if err != nil {
+		return spatialmath.NewR4AA()
 	}
-
-	// axis = [R32-R23, R13-R31, R21-R12] / (2*sin(theta))
-	s := 2 * math.Sin(theta)
-	ox = (d.rot[2][1] - d.rot[1][2]) / s
-	oy = (d.rot[0][2] - d.rot[2][0]) / s
-	oz = (d.rot[1][0] - d.rot[0][1]) / s
-
-	// Convert to degrees for Viam
-	theta = theta * (180.0 / math.Pi)
-	return ox, oy, oz, theta
+	return rm.AxisAngles()
 }
 
-// initOrientationFromGravity sets the initial rotation matrix so that
-// the measured gravity vector aligns with world -Z.
+// initOrientationFromGravity sets the initial rotation matrix so that the
+// at-rest accelerometer reading maps to world +Z. The accelerometer measures
+// specific force, which at rest points opposite gravity (up), and update()
+// relies on this when it subtracts gravity from worldAZ.
 func (d *deadReckoner) initOrientationFromGravity(accX, accY, accZ float32) {
-	// Measured gravity in body frame (normalized)
-	gx, gy, gz := float64(accX), float64(accY), float64(accZ)
-	norm := math.Sqrt(gx*gx + gy*gy + gz*gz)
+	// Measured specific force in body frame (normalized): body-frame "up"
+	ux, uy, uz := float64(accX), float64(accY), float64(accZ)
+	norm := math.Sqrt(ux*ux + uy*uy + uz*uz)
 	if norm < 0.1 {
 		return
 	}
-	gx /= norm
-	gy /= norm
-	gz /= norm
+	ux /= norm
+	uy /= norm
+	uz /= norm
 
-	// We want to find R such that R * [gx,gy,gz] = [0,0,-1]
-	// (gravity in body frame maps to -Z in world frame)
-	// Use Rodrigues' rotation formula
-	// cross = g × [0,0,-1]
-	cx := gy*(-1) - gz*0 // gy*(-1)
-	cy := gz*0 - gx*(-1) // gx
-	cz := gx*0 - gy*0    // 0
+	// We want R such that R * [ux,uy,uz] = [0,0,+1].
+	// Rotation axis = u × [0,0,1], angle = atan2(|axis|, u · [0,0,1])
+	cx := uy
+	cy := -ux
 
-	dot := gx*0 + gy*0 + gz*(-1) // -gz
-	crossNorm := math.Sqrt(cx*cx + cy*cy + cz*cz)
+	dot := uz
+	crossNorm := math.Sqrt(cx*cx + cy*cy)
 
 	if crossNorm < 1e-10 {
-		// Already aligned (or anti-aligned)
-		if dot > 0 {
-			// Anti-aligned: rotate 180° around X
+		// u is vertical: already upright, or upside down
+		if dot < 0 {
+			// Upside down: rotate 180° around X
 			d.rot[1][1] = -1
 			d.rot[2][2] = -1
 		}
@@ -164,10 +157,9 @@ func (d *deadReckoner) initOrientationFromGravity(accX, accY, accZ float32) {
 	// Normalize cross product (rotation axis)
 	cx /= crossNorm
 	cy /= crossNorm
-	cz /= crossNorm
 
 	angle := math.Atan2(crossNorm, dot)
-	d.applyRotation(cx*angle, cy*angle, cz*angle)
+	d.applyRotation(cx*angle, cy*angle, 0)
 }
 
 // applyRotation applies a small rotation (Rodrigues) to the current rotation matrix.

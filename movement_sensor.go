@@ -100,13 +100,7 @@ func (m *mid360IMU) CompassHeading(ctx context.Context, extra map[string]interfa
 }
 
 func (m *mid360IMU) Orientation(ctx context.Context, extra map[string]interface{}) (spatialmath.Orientation, error) {
-	ox, oy, oz, theta := dr.orientation()
-	return &spatialmath.OrientationVectorDegrees{
-		OX:    ox,
-		OY:    oy,
-		OZ:    oz,
-		Theta: theta,
-	}, nil
+	return dr.orientation(), nil
 }
 
 func (m *mid360IMU) Properties(ctx context.Context, extra map[string]interface{}) (*movementsensor.Properties, error) {
