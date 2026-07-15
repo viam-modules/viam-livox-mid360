@@ -36,9 +36,10 @@ jobs:
         ref: ${{ github.event.pull_request.head.sha }}
         submodules: recursive
 
-    - name: apt update
+    - name: Install build deps
       run: |
         apt-get update
+        apt-get install -y cmake build-essential
 
     - name: Build SDK + module
       run: |

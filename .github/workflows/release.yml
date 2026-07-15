@@ -44,6 +44,11 @@ jobs:
       with:
         go-version-file: go.mod
 
+    - name: Install build deps
+      run: |
+        apt-get update
+        apt-get install -y cmake build-essential
+
     - name: Build module
       run: |
         chown -R testbot:testbot .
