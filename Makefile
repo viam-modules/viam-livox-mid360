@@ -4,7 +4,7 @@ SDK_STATIC_LIB = $(SDK_BUILD_DIR)/sdk_core/liblivox_lidar_sdk_static.a
 MODULE_BIN = livox-mid-360
 TEST_BIN = cmd/test/smoketest
 
-.PHONY: all sdk build test clean
+.PHONY: all sdk build module test clean
 
 all: sdk build
 
@@ -23,8 +23,12 @@ $(SDK_STATIC_LIB):
 build: sdk
 	go build -o $(MODULE_BIN) .
 
+module: build
+	rm -f module.tar.gz
+	tar -czf module.tar.gz $(MODULE_BIN) meta.json
+
 test: sdk
 	go build -o $(TEST_BIN) ./cmd/test/
 
 clean:
-	rm -rf $(SDK_BUILD_DIR) $(MODULE_BIN) $(TEST_BIN)
+	rm -rf $(SDK_BUILD_DIR) $(MODULE_BIN) $(TEST_BIN) module.tar.gz
