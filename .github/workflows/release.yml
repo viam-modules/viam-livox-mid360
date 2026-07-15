@@ -1,0 +1,60 @@
+name: Build and Publish RC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+# To test workflow updates you need to work in a branch directly on viam-modules/viam-livox-mid360
+# and tag your working branch instead of @main in any viam-modules/viam-livox-mid360 "uses" below.
+# Don't forget to tag back to @main before merge.
+
+jobs:
+  test:
+    uses: ./.github/workflows/test.yml
+
+  publish:
+    needs: test
+    strategy:
+      matrix:
+        include:
+          - arch: ubuntu-large
+            image: ghcr.io/viamrobotics/rdk-devenv:amd64-cache
+            platform: linux/amd64
+            label: amd64
+          - arch: github-linux-arm64-8core
+            image: ghcr.io/viamrobotics/rdk-devenv:arm64-cache
+            platform: linux/arm64
+            label: arm64
+
+    runs-on: ${{ matrix.arch }}
+    container:
+      image: ${{ matrix.image }}
+
+    steps:
+    - uses: actions/checkout@v3
+      with:
+        submodules: recursive
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version-file: go.mod
+
+    - name: Build module
+      run: |
+        chown -R testbot:testbot .
+        sudo -u testbot bash -lc 'make module'
+
+    - name: Upload livox-mid360 module to registry
+      uses: viamrobotics/upload-module@main
+      with:
+        meta-path: meta.json
+        module-path: module.tar.gz
+        platform: ${{ matrix.platform }}
+        version: ${{ github.ref_name }}
+        key-id: ${{ secrets.VIAM_DEV_API_KEY_ID }}
+        key-value: ${{ secrets.VIAM_DEV_API_KEY }}
