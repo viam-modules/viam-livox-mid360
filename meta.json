@@ -7,11 +7,15 @@
   "models": [
     {
       "api": "rdk:component:camera",
-      "model": "viam:livox:mid360"
+      "model": "viam:livox:mid360",
+      "markdown_link": "README.md#configure-your-mid-360-camera",
+      "short_description": "point cloud (Camera) for the Livox Mid-360 LiDAR"
     },
     {
       "api": "rdk:component:movement_sensor",
-      "model": "viam:livox:mid360-imu"
+      "model": "viam:livox:mid360-imu",
+      "markdown_link": "README.md#configure-your-mid-360-imu",
+      "short_description": "IMU (MovementSensor) for the Livox Mid-360 LiDAR"
     }
   ],
   "entrypoint": "livox-mid-360",
