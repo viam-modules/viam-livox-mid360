@@ -107,13 +107,12 @@ func (d *deadReckoner) orientation() *spatialmath.R4AA {
 	d.mu.Lock()
 	defer d.mu.Unlock()
 
-	// spatialmath.RotationMatrix stores the transpose of this active
-	// body→world matrix (see its Quaternion() conversion), so flatten
-	// column-major.
+	// spatialmath.RotationMatrix takes the active body→world matrix in
+	// row-major order.
 	rm, err := spatialmath.NewRotationMatrix([]float64{
-		d.rot[0][0], d.rot[1][0], d.rot[2][0],
-		d.rot[0][1], d.rot[1][1], d.rot[2][1],
-		d.rot[0][2], d.rot[1][2], d.rot[2][2],
+		d.rot[0][0], d.rot[0][1], d.rot[0][2],
+		d.rot[1][0], d.rot[1][1], d.rot[1][2],
+		d.rot[2][0], d.rot[2][1], d.rot[2][2],
 	})
 	if err != nil {
 		return spatialmath.NewR4AA()
