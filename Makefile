@@ -2,6 +2,8 @@ SDK_DIR = third_party/Livox-SDK2
 SDK_BUILD_DIR = $(SDK_DIR)/build
 SDK_STATIC_LIB = $(SDK_BUILD_DIR)/sdk_core/liblivox_lidar_sdk_static.a
 MODULE_BIN = livox-mid-360
+# nproc reports the host's CPUs inside CI containers; cap the SDK compile to stay within memory.
+JOBS ?= $(shell n=$$(sysctl -n hw.ncpu 2>/dev/null || nproc); [ "$$n" -gt 4 ] && echo 4 || echo $$n)
 TEST_BIN = cmd/test/smoketest
 
 .PHONY: all sdk build module test clean
@@ -11,11 +13,13 @@ all: sdk build
 sdk: $(SDK_STATIC_LIB)
 
 $(SDK_STATIC_LIB):
+	# A plain clone leaves the submodule empty; cloud builds clone that way.
+	test -f $(SDK_DIR)/CMakeLists.txt || git submodule update --init --recursive $(SDK_DIR)
 	# Apply macOS compatibility patches (build-time only, not committed)
 	./patches/apply_macos.sh $(SDK_DIR)
 	mkdir -p $(SDK_BUILD_DIR)
 	cd $(SDK_BUILD_DIR) && cmake .. -DCMAKE_POLICY_VERSION_MINIMUM=3.5
-	cd $(SDK_BUILD_DIR) && make -j$$(sysctl -n hw.ncpu 2>/dev/null || nproc)
+	cd $(SDK_BUILD_DIR) && make -j$(JOBS)
 	# Restore patched files
 	cd $(SDK_DIR) && mv sdk_core/CMakeLists.txt.bak sdk_core/CMakeLists.txt
 	cd $(SDK_DIR) && mv sdk_core/device_manager.cpp.bak2 sdk_core/device_manager.cpp
