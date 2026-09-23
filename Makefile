@@ -11,6 +11,8 @@ all: sdk build
 sdk: $(SDK_STATIC_LIB)
 
 $(SDK_STATIC_LIB):
+	# A plain clone leaves the submodule empty; cloud builds clone that way.
+	test -f $(SDK_DIR)/CMakeLists.txt || git submodule update --init --recursive $(SDK_DIR)
 	# Apply macOS compatibility patches (build-time only, not committed)
 	./patches/apply_macos.sh $(SDK_DIR)
 	mkdir -p $(SDK_BUILD_DIR)
