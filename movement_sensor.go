@@ -56,6 +56,7 @@ func (m *mid360IMU) AngularVelocity(ctx context.Context, extra map[string]interf
 		return spatialmath.AngularVelocity{}, fmt.Errorf("no IMU data yet")
 	}
 	imu := v.(*imuReading)
+	// Livox SDK reports gyro in rad/s; Viam GetAngularVelocity is deg/s.
 	return spatialmath.AngularVelocity{
 		X: float64(imu.GyroX) * (180.0 / math.Pi),
 		Y: float64(imu.GyroY) * (180.0 / math.Pi),
@@ -82,13 +83,7 @@ func (m *mid360IMU) LinearVelocity(ctx context.Context, extra map[string]interfa
 }
 
 func (m *mid360IMU) Position(ctx context.Context, extra map[string]interface{}) (*geo.Point, float64, error) {
-	x, y, z := dr.position()
-	// Convert meters to a fake geo point (1 degree lat ≈ 111319.5m)
-	// Origin at 0,0 — these are just local offsets for the SLAM prior
-	const metersPerDegree = 111319.5
-	lat := y / metersPerDegree
-	lng := x / metersPerDegree
-	return geo.NewPoint(lat, lng), z, nil
+	return nil, 0, movementsensor.ErrMethodUnimplementedPosition
 }
 
 func (m *mid360IMU) CompassHeading(ctx context.Context, extra map[string]interface{}) (float64, error) {
@@ -96,15 +91,13 @@ func (m *mid360IMU) CompassHeading(ctx context.Context, extra map[string]interfa
 }
 
 func (m *mid360IMU) Orientation(ctx context.Context, extra map[string]interface{}) (spatialmath.Orientation, error) {
-	return dr.orientation(), nil
+	return nil, movementsensor.ErrMethodUnimplementedOrientation
 }
 
 func (m *mid360IMU) Properties(ctx context.Context, extra map[string]interface{}) (*movementsensor.Properties, error) {
 	return &movementsensor.Properties{
 		AngularVelocitySupported:    true,
 		LinearAccelerationSupported: true,
-		PositionSupported:           true,
-		OrientationSupported:        true,
 	}, nil
 }
 

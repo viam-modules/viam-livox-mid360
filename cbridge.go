@@ -119,9 +119,6 @@ func goImuCallback(handle C.uint32_t, devType C.uint8_t, data *C.LivoxLidarEther
 		AccX: ax, AccY: ay, AccZ: az,
 		Timestamp: ts,
 	})
-
-	// Feed dead reckoner at 200Hz
-	dr.update(gx, gy, gz, ax, ay, az, ts)
 }
 
 //export goInfoChangeCallback
