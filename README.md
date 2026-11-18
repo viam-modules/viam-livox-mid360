@@ -56,9 +56,11 @@ reflectivity carried as the point value. `Images()` is not implemented.
 
 ### MovementSensor (`viam:livox:mid360-imu`)
 
-Serves the built-in IMU. `AngularVelocity()` returns gyro readings (rad/s) and `LinearAcceleration()`
-returns accelerometer readings. `Position`, `LinearVelocity`, `CompassHeading`, and `Orientation` are
-not supported and return the appropriate unimplemented errors.
+Serves the built-in IMU. `AngularVelocity()` returns gyro readings in **degrees per second**
+(Viam MovementSensor API; Livox SDK raw units are rad/s and are converted).
+`LinearAcceleration()` returns accelerometer readings in m/s².
+`Position`, `Orientation`, `LinearVelocity`, and `CompassHeading` are not supported
+and return the appropriate unimplemented errors.
 
 ## Next Steps
 
