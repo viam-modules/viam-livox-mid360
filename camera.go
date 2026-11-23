@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"image/color"
 	"math"
@@ -16,6 +17,8 @@ import (
 	"go.viam.com/rdk/rimage"
 	"go.viam.com/rdk/spatialmath"
 	"go.viam.com/rdk/utils"
+
+	"github.com/viamrobotics/livox-mid-360/framegate"
 )
 
 func init() {
@@ -55,14 +58,15 @@ func newMid360Camera(
 	}, nil
 }
 
-// getLatestFrame waits for and returns a copy of the latest point data.
+// getLatestFrame waits for and returns a copy of the latest point data. Every
+// caller gets each frame. They used to take turns, so with a SLAM service and
+// a navigation service both reading the lidar each one saw every other frame.
 func (c *mid360Camera) getLatestFrame(ctx context.Context) ([]pointData, error) {
-	select {
-	case <-frames.ready:
-	case <-ctx.Done():
-		return nil, ctx.Err()
-	case <-time.After(2 * time.Second):
-		return nil, fmt.Errorf("timeout waiting for point cloud frame")
+	if err := frames.ready.Wait(ctx, 2*time.Second); err != nil {
+		if errors.Is(err, framegate.ErrTimeout) {
+			return nil, fmt.Errorf("timeout waiting for point cloud frame")
+		}
+		return nil, err
 	}
 
 	frames.mu.Lock()
