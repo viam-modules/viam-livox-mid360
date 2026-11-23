@@ -16,6 +16,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"unsafe"
+
+	"github.com/viamrobotics/livox-mid-360/framegate"
 )
 
 // Point data extracted from SDK callbacks.
@@ -40,12 +42,13 @@ type frameBuffer struct {
 	frameCnt       uint8
 	writeTimestamp uint64
 	readTimestamp  uint64
-	ready          chan struct{}
-	initialized    bool
+	// tells readers when reading holds a frame they may take
+	ready       *framegate.Gate
+	initialized bool
 }
 
 var (
-	frames    = &frameBuffer{ready: make(chan struct{}, 1)}
+	frames    = &frameBuffer{ready: framegate.New()}
 	latestIMU atomic.Value // stores *imuReading
 )
 
@@ -72,10 +75,7 @@ func goPointCloudCallback(handle C.uint32_t, devType C.uint8_t, data *C.LivoxLid
 	if frames.initialized && ts-frames.writeTimestamp >= frameIntervalNs {
 		frames.reading, frames.writing = frames.writing, frames.reading[:0]
 		frames.readTimestamp = frames.writeTimestamp
-		select {
-		case frames.ready <- struct{}{}:
-		default:
-		}
+		frames.ready.Publish()
 	}
 
 	frames.initialized = true
